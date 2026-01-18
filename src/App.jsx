@@ -1,7 +1,8 @@
 import { useState } from "react"
 import Gallery from "./components/Gallery"
-import CertificateDetails from "./components/CertificateDetails"
+
 import { certificates } from "./data/certificates"
+import CertificateDetails from "./components/CertificateDetails/CertificateDetails"
 
 
 function App() {
