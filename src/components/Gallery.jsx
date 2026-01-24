@@ -1,9 +1,43 @@
-import React from 'react'
-import { certificates } from '../data/certificates'
-import CertificateCard from './CertificateCard'
+import React, { useState, useEffect } from 'react';
+import { db } from '../config/firebase'; 
+import { collection, getDocs, query, orderBy } from 'firebase/firestore'; 
+import CertificateCard from './CertificateCard';
+import CertificateDetails from './CertificateDetails/CertificateDetails'; // Import Modal Here
+import SkeletonLoader from './SkeletonLoader';
 
-const Gallery = ({ onSelect }) => {
+const Gallery = () => {
+  const [certificates, setCertificates] = useState([]); 
+  const [loading, setLoading] = useState(true);
+  
+  // State for the modal (Moved from App.jsx)
+  const [selectedCert, setSelectedCert] = useState(null);
+
+  // Fetch Data from Firebase
+  useEffect(() => {
+    const fetchCertificates = async () => {
+      try {
+        // CHANGED: Create a query that sorts by 'createdAt' in ascending order
+        const q = query(collection(db, "certificates"), orderBy("createdAt", "asc"));
+        
+        const querySnapshot = await getDocs(q); // Fetch using the query 'q'
+        const certsData = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setCertificates(certsData);
+      } catch (error) {
+        console.error("Error fetching certificates:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCertificates();
+  }, []);
+
   const title = "Certificate Gallery";
+
+  if (loading) return <SkeletonLoader />;
 
   return (
     <div 
@@ -14,13 +48,12 @@ const Gallery = ({ onSelect }) => {
       
       <div className="relative z-10 container mx-auto px-4 py-12 md:py-20">
         <header className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl  font-extrabold text-white tracking-tight mb-4 drop-shadow-lg cursor-default">
+          <h1 className="text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-4 drop-shadow-lg cursor-default">
             {title.split("").map((char, index) => (
               <span
                 key={index}
-                className="inline-block transition-transform duration-200 hover:scale-125 "
+                className="inline-block transition-transform duration-200 hover:scale-125 hover:text-blue-400"
               >
-                {/* Check if char is space, use non-breaking space if true to preserve layout */}
                 {char === " " ? "\u00A0" : char}
               </span>
             ))}
@@ -32,13 +65,23 @@ const Gallery = ({ onSelect }) => {
             <CertificateCard 
               key={certificate.id} 
               certificate={certificate}
-              onClick={() => onSelect(certificate)} 
+              onClick={() => setSelectedCert(certificate)} // Set state directly
             />
           ))}
         </div>
       </div>
+
+      {/* Render Modal if a certificate is selected */}
+      {selectedCert && (
+        <CertificateDetails 
+          certificate={selectedCert}
+          certificates={certificates} // Pass the LIVE data from Firebase
+          onClose={() => setSelectedCert(null)}
+          onChange={setSelectedCert}
+        />
+      )}
     </div>
   )
 }
 
-export default Gallery
+export default Gallery;

@@ -12,11 +12,11 @@ const CertificateCard = ({certificate, onClick}) => {
       className='group relative bg-gray-900/40 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-900/20 hover:border-blue-500/30 transition-all duration-500 ease-out'
       onClick={onClick}
     >
-      <div className="aspect-4/3 w-full overflow-hidden relative p-3 z-10 ">
+      <div className="aspect-4/3 w-full overflow-hidden relative z-10 ">
         <img 
           src={certificate.image} 
           alt={certificate.title}
-          className='w-full h-full rounded-t-lg  object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500' 
+          className='w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500' 
         />
         <div className="absolute inset-0 bg-linear-to-t from-gray-900 via-transparent to-transparent opacity-80"></div>
       </div>

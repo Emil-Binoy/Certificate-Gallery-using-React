@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+/* src/index.css */
+
+@layer utilities {
+  /* Define the animation */
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  /* Create a class we can use in React */
+  .animate-shimmer {
+    animation: shimmer 1.5s infinite linear;
+  }
+}

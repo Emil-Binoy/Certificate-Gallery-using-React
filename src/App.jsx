@@ -1,29 +1,22 @@
-import { useState } from "react"
-import Gallery from "./components/Gallery"
+import React from "react";
+import { Routes, Route } from "react-router-dom"; // Import Router components
 
-import { certificates } from "./data/certificates"
-import CertificateDetails from "./components/CertificateDetails/CertificateDetails"
-
+// Import Pages
+import Gallery from "./components/Gallery";
+import AdminPanel from "./components/AdminPanel"; // Make sure path is correct
 
 function App() {
-  const [selectedCert, setSelectedCert] = useState(null)
-
   return (
-    <div >
-      
-      <Gallery onSelect={setSelectedCert}/>
-      
-      {selectedCert && (
-        <CertificateDetails 
-          certificate={selectedCert}
-          certificates={certificates}
-          onClose={()=>setSelectedCert(null)}
-          onChange={setSelectedCert}
-        />
-      )}
-      
+    <div>
+      <Routes>
+        {/* Home Route (Gallery) */}
+        <Route path="/" element={<Gallery />} />
+        
+        {/* Admin Route (Upload Panel) */}
+        <Route path="/admin" element={<AdminPanel />} />
+      </Routes>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
