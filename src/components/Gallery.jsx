@@ -48,16 +48,22 @@ const Gallery = () => {
       
       <div className="relative z-10 container mx-auto px-4 py-12 md:py-20">
         <header className="text-center mb-12">
-          <h1 className="text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-4 drop-shadow-lg cursor-default">
-            {title.split("").map((char, index) => (
-              <span
-                key={index}
-                className="inline-block transition-transform duration-200 hover:scale-125 hover:text-blue-400"
-              >
-                {char === " " ? "\u00A0" : char}
+          <h1 className="text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-4 drop-shadow-lg cursor-default flex flex-wrap justify-center gap-4">
+            {/* 1. Split by words first to keep them together */}
+            {title.split(" ").map((word, wordIndex) => (
+              <span key={wordIndex} className="inline-block whitespace-nowrap">
+                {/* 2. Then split each word into characters for the hover effect */}
+                {word.split("").map((char, charIndex) => (
+                  <span
+                    key={charIndex}
+                    className="inline-block transition-transform duration-200 hover:scale-125 hover:text-blue-400"
+                  >
+                    {char}
+                  </span>
+                ))}
               </span>
             ))}
-          </h1> 
+          </h1>
         </header>
 
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto'>
