@@ -52,6 +52,20 @@ const CertificateForm = ({
           </div>
         </div>
 
+        {/* PRIORITY ORDER INPUT */}
+        <div>
+          <label className="block text-gray-400 mb-1 text-sm">
+             Display Priority (1 = Top, Empty = Bottom)
+          </label>
+          <input 
+            type="number" 
+            value={formData.order} 
+            onChange={e => setFormData({ ...formData, order: e.target.value })} 
+            className="w-full bg-gray-700 border border-gray-600 rounded-lg p-2 focus:border-yellow-500 transition-colors" 
+            placeholder="e.g. 1 for Top Priority" 
+          />
+        </div>
+
         <div>
           <label className="block text-gray-400 mb-1 text-sm">Tags</label>
           <input 
@@ -62,7 +76,7 @@ const CertificateForm = ({
           />
         </div>
 
-        {/* File Upload */}
+        {/* File Upload Area */}
         <div>
           <label className="block text-gray-400 mb-1 text-sm">Certificate Image</label>
           <div className="border-2 border-dashed border-gray-600 rounded-xl p-4 text-center hover:border-blue-500 transition-colors relative bg-gray-900/50">

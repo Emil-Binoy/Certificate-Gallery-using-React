@@ -3,9 +3,9 @@ import { db, auth } from '../config/firebase';
 import { collection, addDoc, getDocs, deleteDoc, updateDoc, doc, query, orderBy } from 'firebase/firestore'; 
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 
-// === CONFIGURATION ===
+// Securely access keys from .env
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME; 
-const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET; 
 
 export const useAdminLogic = () => {
   const [user, setUser] = useState(null);
@@ -19,7 +19,8 @@ export const useAdminLogic = () => {
   // Form State
   const [formData, setFormData] = useState({
     title: '', issuer: '', date: '', tags: '',
-    imageFile: null, previewUrl: ''
+    imageFile: null, previewUrl: '',
+    order: '' // NEW: Priority Order field
   });
   const [editingId, setEditingId] = useState(null);
 
@@ -32,10 +33,32 @@ export const useAdminLogic = () => {
     return () => unsubscribe();
   }, []);
 
-  const fetchCertificates = async () => {
+  // Fetch & Sort Logic
+const fetchCertificates = async () => {
+    // 1. Fetch from Firestore (Sorted by Date first)
     const q = query(collection(db, "certificates"), orderBy("createdAt", "asc"));
     const querySnapshot = await getDocs(q);
-    setCertificates(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    const certsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // 2. BULLETPROOF SORTING
+    const sortedCerts = certsData.sort((a, b) => {
+      // Helper: Get order, or default to 999 if missing/invalid
+      const getOrder = (item) => {
+        // If order is missing, null, or empty string -> it goes to the bottom (999)
+        if (item.order === undefined || item.order === null || item.order === "") {
+            return 999;
+        }
+        return Number(item.order);
+      };
+
+      const orderA = getOrder(a);
+      const orderB = getOrder(b);
+
+      // Sort Ascending (1 goes to top, 999 goes to bottom)
+      return orderA - orderB;
+    });
+
+    setCertificates(sortedCerts);
   };
 
   const handleLogin = async (e) => {
@@ -54,7 +77,12 @@ export const useAdminLogic = () => {
     const data = new FormData();
     data.append("file", file);
     data.append("upload_preset", UPLOAD_PRESET);
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: data });
+
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { 
+      method: "POST", 
+      body: data 
+    });
+
     const json = await res.json();
     return json.secure_url;
   };
@@ -73,20 +101,21 @@ export const useAdminLogic = () => {
       date: cert.date,
       tags: cert.tags.join(', '),
       previewUrl: cert.image,
-      imageFile: null
+      imageFile: null,
+      order: cert.order || '' // Load existing order
     });
     setEditingId(cert.id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const cancelEditing = () => {
-    setFormData({ title: '', issuer: '', date: '', tags: '', imageFile: null, previewUrl: '' });
+    setFormData({ title: '', issuer: '', date: '', tags: '', imageFile: null, previewUrl: '', order: '' });
     setEditingId(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { title, issuer, date, tags, imageFile, previewUrl } = formData;
+    const { title, issuer, date, tags, imageFile, previewUrl, order } = formData;
     
     if ((!imageFile && !previewUrl) || !title || !issuer) return alert("Please fill all fields");
 
@@ -98,20 +127,21 @@ export const useAdminLogic = () => {
       const certData = {
         title, issuer, date,
         tags: tags.split(',').map(tag => tag.trim()), 
-        image: finalImageUrl, 
+        image: finalImageUrl,
+        order: order ? Number(order) : 999 // Save as number or default to 999
       };
 
       if (editingId) {
         await updateDoc(doc(db, "certificates", editingId), certData);
-        alert("Updated!");
+        alert("Certificate Updated!");
         setEditingId(null);
       } else {
         await addDoc(collection(db, "certificates"), { ...certData, createdAt: new Date() });
-        alert("Added!");
+        alert("Certificate Added!");
       }
 
-      // Reset Form
-      setFormData({ title: '', issuer: '', date: '', tags: '', imageFile: null, previewUrl: '' });
+      // Reset Form & Refresh
+      setFormData({ title: '', issuer: '', date: '', tags: '', imageFile: null, previewUrl: '', order: '' });
       fetchCertificates(); 
 
     } catch (error) {

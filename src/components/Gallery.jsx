@@ -2,29 +2,36 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../config/firebase'; 
 import { collection, getDocs, query, orderBy } from 'firebase/firestore'; 
 import CertificateCard from './CertificateCard';
-import CertificateDetails from './CertificateDetails/CertificateDetails'; // Import Modal Here
+import CertificateDetails from './CertificateDetails/CertificateDetails'; 
 import SkeletonLoader from './SkeletonLoader';
 
 const Gallery = () => {
   const [certificates, setCertificates] = useState([]); 
   const [loading, setLoading] = useState(true);
-  
-  // State for the modal (Moved from App.jsx)
   const [selectedCert, setSelectedCert] = useState(null);
 
-  // Fetch Data from Firebase
-  useEffect(() => {
+useEffect(() => {
     const fetchCertificates = async () => {
       try {
-        // CHANGED: Create a query that sorts by 'createdAt' in ascending order
         const q = query(collection(db, "certificates"), orderBy("createdAt", "asc"));
-        
-        const querySnapshot = await getDocs(q); // Fetch using the query 'q'
+        const querySnapshot = await getDocs(q);
         const certsData = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
-        setCertificates(certsData);
+
+        // === PASTE THE BULLETPROOF SORTING HERE TOO ===
+        const sortedCerts = certsData.sort((a, b) => {
+            const getOrder = (item) => {
+                if (item.order === undefined || item.order === null || item.order === "") {
+                    return 999;
+                }
+                return Number(item.order);
+            };
+            return getOrder(a) - getOrder(b);
+        });
+
+        setCertificates(sortedCerts);
       } catch (error) {
         console.error("Error fetching certificates:", error);
       } finally {
@@ -48,40 +55,40 @@ const Gallery = () => {
       
       <div className="relative z-10 container mx-auto px-4 py-12 md:py-20">
         <header className="text-center mb-12">
-          <h1 className="text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-4 drop-shadow-lg cursor-default flex flex-wrap justify-center gap-4">
-            {/* 1. Split by words first to keep them together */}
+            {/* === ANIMATION PRESERVED === */}
+            <h1 className="text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-4 drop-shadow-lg cursor-default flex flex-wrap justify-center gap-4">
             {title.split(" ").map((word, wordIndex) => (
-              <span key={wordIndex} className="inline-block whitespace-nowrap">
-                {/* 2. Then split each word into characters for the hover effect */}
+                <span key={wordIndex} className="inline-block whitespace-nowrap">
                 {word.split("").map((char, charIndex) => (
-                  <span
+                    <span
                     key={charIndex}
                     className="inline-block transition-transform duration-200 hover:scale-125 hover:text-blue-400"
-                  >
+                    >
                     {char}
-                  </span>
+                    </span>
                 ))}
-              </span>
+                </span>
             ))}
-          </h1>
+            </h1>
         </header>
 
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto'>
           {certificates.map(certificate => (
             <CertificateCard 
               key={certificate.id} 
-              certificate={certificate}
-              onClick={() => setSelectedCert(certificate)} // Set state directly
+              // === IMPORTANT CHANGE: Renamed prop to 'cert' to match CertificateCard.jsx ===
+              cert={certificate}
+              onClick={() => setSelectedCert(certificate)} 
             />
           ))}
         </div>
       </div>
 
-      {/* Render Modal if a certificate is selected */}
       {selectedCert && (
         <CertificateDetails 
-          certificate={selectedCert}
-          certificates={certificates} // Pass the LIVE data from Firebase
+          // === IMPORTANT CHANGE: Renamed prop to 'cert' for consistency ===
+          cert={selectedCert}
+          certificates={certificates}
           onClose={() => setSelectedCert(null)}
           onChange={setSelectedCert}
         />
