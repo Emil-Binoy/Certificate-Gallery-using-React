@@ -9,13 +9,15 @@ import { useTiltEffect } from '../../hooks/tiltEffect';
 import Viewer from './Viewer';
 import MetaPanel from './MetaPanel';
 
-const CertificateDetails = ({ certificate, certificates, onClose, onChange }) => {
+// FIX 1: Changed "{ certificate }" to "{ cert }" to match Gallery.jsx
+const CertificateDetails = ({ cert, certificates, onClose, onChange }) => {
   // State
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Custom Hooks
-  const nav = useCertificateNavigation(certificate, certificates, onClose, onChange);
-  const zoomControls = useZoomControls(certificate);
+  // FIX 2: Pass 'cert' to your hooks instead of 'certificate'
+  const nav = useCertificateNavigation(cert, certificates, onClose, onChange);
+  const zoomControls = useZoomControls(cert);
   const tiltEffect = useTiltEffect(isFullscreen);
 
   // Handlers
@@ -25,7 +27,8 @@ const CertificateDetails = ({ certificate, certificates, onClose, onChange }) =>
     zoomControls.setZoom(1);
   };
 
-  if (!certificate) return null;
+  // FIX 3: Safety check on 'cert'
+  if (!cert) return null;
 
   return (
     // Backdrop
@@ -47,7 +50,8 @@ const CertificateDetails = ({ certificate, certificates, onClose, onChange }) =>
         
         {/* Left Side: Image Viewer */}
         <Viewer 
-          certificate={certificate}
+          // FIX 4: Pass 'cert' into the 'certificate' prop of the child component
+          certificate={cert}
           zoom={zoomControls.zoom}
           tilt={tiltEffect.tilt}
           isFullscreen={isFullscreen}
@@ -61,7 +65,8 @@ const CertificateDetails = ({ certificate, certificates, onClose, onChange }) =>
         {/* Right Side: Metadata Panel (Hidden in Fullscreen) */}
         {!isFullscreen && (
           <MetaPanel 
-            certificate={certificate} 
+            // FIX 5: Pass 'cert' here too
+            certificate={cert} 
             onClose={onClose} 
           />
         )}
